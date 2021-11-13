@@ -96,6 +96,7 @@ async def send_message():
 @client.event
 async def on_ready():
   print("Bot online: {0.user}".format(client))
+  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name='Monkey Music'))
   send_message.start()
 
 keep_alive()
