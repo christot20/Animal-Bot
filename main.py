@@ -9,13 +9,21 @@ from bs4 import BeautifulSoup
 import datetime
 import secrets
 from keep_alive import keep_alive
+import requests
 
 client = discord.Client()
 
+
+
+r = requests.head(url="https://discord.com/api/v1")
+try:
+    print(f"Rate limit {int(r.headers['Retry-After']) / 60} minutes left")
+except:
+    print("No rate limit")
 #print(datetime.datetime.now().minute)
   
 # providing url
-channelid = 801966805442101261
+channelid = 908889407522762872
 url = "https://animalcorner.org/"
 listUrl = "https://animalcorner.org/animals/"
   
@@ -42,7 +50,9 @@ animalList = [] #list used to store links
 factList = []
 
 #loop to get links to scrape facts
-for article in htmlListParse.find("article", attrs={"class": "post-721 animals type-animals status-publish format-standard has-post-thumbnail category-uncategorized endangered-not-listed group-mammalia entry"}):
+#change back to article tag in main tag fucks up
+#class was changed for the article tag which is why i switched
+for article in htmlListParse.find("main", attrs={"class": "content"}):
   for div in htmlListParse.find_all("div", ["one-third", "one-third first"]):
     a = div.find('a')
     print(a['href'])
@@ -66,6 +76,8 @@ def randomFact():
   print (x)
   if '' in factList:
     factList.remove('')
+  if ' ' in factList:
+    factList.remove(' ')
   return "*"+secrets.choice(factList)+"*" +"\n"+ x
 
 
@@ -75,7 +87,7 @@ for links in htmlParse.find_all("a"):
   links.extract()
 
 # getting all the paragraphs
-for para in htmlParse.find("div", attrs={"id": "featured-text"}).find_all("p"):
+for para in htmlParse.find("main", attrs={"class": "content"}).find_all("p"):
     bot_message = para.get_text()
 
 @client.event
@@ -101,4 +113,9 @@ async def on_ready():
 
 keep_alive()
 my_secret = os.environ["TOKEN"]
-client.run(my_secret)
+try:
+    client.run(my_secret)
+except discord.errors.HTTPException:
+    print("\n\n\nBLOCKED BY RATE LIMITS\nRESTARTING NOW\n\n\n")
+    os.system("python restarter.py")
+    os.system('kill 1')
